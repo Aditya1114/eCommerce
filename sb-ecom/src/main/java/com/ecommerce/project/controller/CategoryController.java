@@ -2,24 +2,62 @@ package com.ecommerce.project.controller;
 
 import com.ecommerce.project.SbEcomApplication;
 import com.ecommerce.project.model.Category;
+import com.ecommerce.project.service.CategoryService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
-@RequestMapping("/api/public/categories")
+@RequestMapping("/api")
 @RestController
 public class CategoryController {
-    private List<Category> categories = new ArrayList<>();
+    @Autowired
+    private CategoryService categoryService;
 
-    @GetMapping
-    public List<Category> getAllCategories(){
-        return categories;
+
+
+    @GetMapping("/public/categories")
+    //@RequestMapping(value = "/public/categories", method = RequestMethod.GET)
+    public ResponseEntity<List<Category>> getAllCategories(){
+
+        List<Category> categories = categoryService.getAllCategories();
+        return new ResponseEntity<>(categories, HttpStatus.OK);
     }
-    @PostMapping
-    public String createCategory(@RequestBody Category category){
-        categories.add(category);
-        return "Category added Successfully";
 
+   @PostMapping("/public/categories")
+   // @RequestMapping(value = "/public/categories", method = RequestMethod.POST)
+    public ResponseEntity<String> createCategory(@RequestBody Category category){
+        categoryService.createCategory(category);
+        return new ResponseEntity<>("Category added Successfully", HttpStatus.CREATED);
+
+    }
+
+    // Deletion Methods
+   @DeleteMapping("/admin/categories/{categoryId}")
+   // @RequestMapping(value = "/admin/categories/{categoryId}", method = RequestMethod.DELETE)
+    public ResponseEntity<String> deleteCategory(@PathVariable Long categoryId){
+        try {
+            String status = categoryService.deleteCategory(categoryId);
+            //return new ResponseEntity<>(status, HttpStatus.OK);
+            //return ResponseEntity.ok(status);
+            //or
+            return ResponseEntity.status(HttpStatus.OK).body(status);
+        } catch (ResponseStatusException e){
+            return new ResponseEntity<>(e.getReason(), e.getStatusCode());
+        }
+    }
+    @PutMapping("/public/categories/{categoryId}")
+  //  @RequestMapping(value = "/public/categories/{categoryId}", method = RequestMethod.PUT)
+    public ResponseEntity<String> updateCategory(@RequestBody Category category, @PathVariable Long categoryId){
+        try {
+            Category savedCategory = categoryService.updateCategory(category, categoryId);
+            return new ResponseEntity<>("Updated Category with category id: " + categoryId, HttpStatus.ACCEPTED);
+        }catch (ResponseStatusException e){
+            return new ResponseEntity<>(e.getReason(), e.getStatusCode());
+        }
     }
 
 }
